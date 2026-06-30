@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="status-report">
+    <div class="container-status">
+        <div class="status">
+            <h1>Status Report</h1>
+            <p class="report">Report Submitted, Help is on the way!</p>
+            <div class="current-address">
+                <h2>Current Address</h2>
+                <p>{{ current_location }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

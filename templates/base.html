@@ -1,0 +1,35 @@
+{%load static%}
+{%load sass_tags%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% sass_src 'css/styles.scss' %}">
+    <link href='https://fonts.googleapis.com/css?family=Crimson Text' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+    <title>EmergenSee Login</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'Assets/EmergenSee.svg' %}">
+    {%if request.user.is_authenticated%}
+        <p>Hello, {{request.user.username}} | <a href="{% url 'Logout' %}">Logout</a></p>
+    {%else%}
+        <a href="{% url 'Login' %}"></a>
+    {%endif%}
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container-status">
+                <div class="center-brand">
+                    <h1 class="emergen">Emergen<h1 class="see">See</h1></h1>
+                </div>
+            </div>
+        </nav>
+    </header>
+    {% block content %}
+    {% endblock %}
+    
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>

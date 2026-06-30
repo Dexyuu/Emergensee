@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<section class="main-section">
+    <div class="container-upload">
+        <h1>Take a picture or upload a picture of the scene</h1>
+        <div class="upload-section">
+            <div class="upload-icon" onclick="document.getElementById('file-input').click();">
+                <img id="upload-icon-img" src="{% static 'Assets/upload.png' %}" alt="Upload">
+                <p>Upload an Image</p>
+            </div>
+            <form method="post" enctype="multipart/form-data" onsubmit="return validateForm()">
+                {% csrf_token %}
+                <input type="file" id="file-input" name="image" style="display: none;" onchange="previewImage(event);">
+                <input type="hidden" id="latitude" name="latitude">
+                <input type="hidden" id="longitude" name="longitude">
+                <input type="hidden" id="address" name="address">
+                <div class="upload-button" id="submit-button" style="display: none;">
+                    <button type="button" id="getLocation">Get Location</button>
+                    <button type="submit" id="submit-form" style="display: none;">Submit</button>
+                </div>
+            </form>
+            {% if error %}
+                <p style="color: red;">{{ error }}</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<div id="map" style="height: 400px; width: 100%; display: none;"></div>
+<pre id="location" style="display: none;"></pre>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzj0GXiOlWH3KxYNjAyejXs2WLe7DZ8tk"></script>
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('upload-icon-img');
+            output.src = reader.result;
+            document.getElementById('submit-button').style.display = 'block';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+            center: {lat: -34.397, lng: 150.644},
+            zoom: 6
+        });
+        var infoWindow = new google.maps.InfoWindow;
+
+        document.getElementById('getLocation').addEventListener('click', function() {
+            console.log('Get Location button clicked');
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    console.log('Geolocation success');
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    var geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({'location': pos}, function(results, status) {
+                        if (status === 'OK') {
+                            if (results[0]) {
+                                map.setZoom(15);
+                                var marker = new google.maps.Marker({
+                                    position: pos,
+                                    map: map
+                                });
+                                infoWindow.setPosition(pos);
+                                infoWindow.setContent('Address: ' + results[0].formatted_address + '<br>Lat: ' + pos.lat + ', Lng: ' + pos.lng);
+                                infoWindow.open(map, marker);
+
+                                document.getElementById('location').innerText = 
+                                    'Address: ' + results[0].formatted_address + 
+                                    '\nLatitude: ' + pos.lat + 
+                                    '\nLongitude: ' + pos.lng;
+
+                                // Set hidden input values
+                                document.getElementById('latitude').value = pos.lat;
+                                document.getElementById('longitude').value = pos.lng;
+                                document.getElementById('address').value = results[0].formatted_address;
+
+                                // Show the submit button
+                                document.getElementById('submit-form').style.display = 'block';
+                            } else {
+                                window.alert('No results found');
+                            }
+                        } else {
+                            window.alert('Geocoder failed due to: ' + status);
+                        }
+                    });
+                }, function(error) {
+                    console.log('Geolocation error: ', error);
+                    handleLocationError(true, infoWindow, map.getCenter(), error);
+                });
+            } else {
+                // Browser doesn't support Geolocation
+                console.log('Browser does not support geolocation');
+                handleLocationError(false, infoWindow, map.getCenter());
+            }
+        });
+
+        function handleLocationError(browserHasGeolocation, infoWindow, pos, error) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(browserHasGeolocation ?
+                                  'Error: The Geolocation service failed. ' + error.message :
+                                  'Error: Your browser doesn\'t support geolocation.');
+            infoWindow.open(map);
+        }
+    }
+
+    function validateForm() {
+        var latitude = document.getElementById('latitude').value;
+        var longitude = document.getElementById('longitude').value;
+        if (latitude === '' || longitude === '') {
+            alert('Please get your location before submitting the form.');
+            return false;
+        }
+        return true;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+    });
+</script>
+{% endblock %}
